@@ -1,5 +1,76 @@
 ﻿@page "/"
+@inject NavigationManager NavManager
 
-<h1>Hello, world!</h1>
+<h3 class="text-3xl font-semibold text-center mb-6">
+    Create a new folder
+</h3>
 
-Welcome to your new app.
+<button @onclick="OpenWindow"
+        class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-600 transition-all duration-300">
+    Create new List
+</button>
+
+<div class="mt-6">
+    <ul>
+        @foreach (var folder in _folderNames)
+        {
+            <li @onclick="() => GoToDetails(folder)" class="cursor-pointer">@folder.Title</li>
+        }
+    </ul>
+</div>
+
+@if (_isWindowOpen)
+{
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full sm:w-96 max-w-lg">
+            <h2 class="text-xl font-semibold mb-6 text-center">
+                New Folder
+            </h2>
+            <input placeholder="Name of the folder" @bind="_newFolderTitle"
+                   class="border border-gray-300 rounded-lg p-3 w-full mb-6 text-lg"/>
+            <div class="flex justify-between">
+                <button @onclick="CreateFolder"
+                        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-300">
+                    Create
+                </button>
+                <button @onclick="OpenWindow"
+                        class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-all duration-300">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public FolderItems? Names { get; set; }
+    readonly List<FolderItems> _folderNames = [];
+    bool _isWindowOpen = false;
+    string _newFolderTitle = string.Empty;
+
+    void OpenWindow()
+    {
+        _isWindowOpen = !_isWindowOpen;
+    }
+
+    void CreateFolder()
+    {
+        if (!string.IsNullOrEmpty(_newFolderTitle))
+        {
+            _folderNames.Add(new FolderItems
+                {
+                    Title = _newFolderTitle
+                }
+            );
+            _newFolderTitle = string.Empty;
+            _isWindowOpen = false;
+        }
+    }
+
+    private void GoToDetails(FolderItems items)
+    {
+        var encodedTitle = Uri.EscapeDataString(items.Title);
+        NavManager.NavigateTo($"/folder/{encodedTitle}");
+    }
+
+}
