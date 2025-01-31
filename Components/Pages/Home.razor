@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject FolderDbService DbService
 @inject NavigationManager NavManager
 
 <h3 class="text-3xl font-semibold text-center mb-6">
@@ -14,7 +15,7 @@
     <ul>
         @foreach (var folder in _folderNames)
         {
-            <li @onclick="() => GoToDetails(folder)" class="cursor-pointer">@folder.Title</li>
+            <li @onclick="() => GoToDetails(folder)" class="cursor-pointer">@folder.Name</li>
         }
     </ul>
 </div>
@@ -26,7 +27,7 @@
             <h2 class="text-xl font-semibold mb-6 text-center">
                 New Folder
             </h2>
-            <input placeholder="Name of the folder" @bind="_newFolderTitle"
+            <input placeholder="Name of the folder" @bind="_newFolderName"
                    class="border border-gray-300 rounded-lg p-3 w-full mb-6 text-lg"/>
             <div class="flex justify-between">
                 <button @onclick="CreateFolder"
@@ -46,31 +47,34 @@
     [Parameter] public FolderItems? Names { get; set; }
     readonly List<FolderItems> _folderNames = [];
     bool _isWindowOpen = false;
-    string _newFolderTitle = string.Empty;
+    string _newFolderName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _folderNames.AddRange(await DbService.GetFoldersAsync());
+    }
 
     void OpenWindow()
     {
         _isWindowOpen = !_isWindowOpen;
     }
 
-    void CreateFolder()
+    private async void CreateFolder()
     {
-        if (!string.IsNullOrEmpty(_newFolderTitle))
+        if (!string.IsNullOrEmpty(_newFolderName))
         {
-            _folderNames.Add(new FolderItems
-                {
-                    Title = _newFolderTitle
-                }
-            );
-            _newFolderTitle = string.Empty;
+            await DbService.CreateFolderAsync(_newFolderName);
+            _folderNames.Clear();
+            _folderNames.AddRange(await DbService.GetFoldersAsync());
+
+            _newFolderName = string.Empty;
             _isWindowOpen = false;
         }
     }
 
     private void GoToDetails(FolderItems items)
     {
-        var encodedTitle = Uri.EscapeDataString(items.Title);
-        NavManager.NavigateTo($"/folder/{encodedTitle}");
+        var encodedName = Uri.EscapeDataString(items.Name);
+        NavManager.NavigateTo($"/folder/{encodedName}");
     }
-
 }

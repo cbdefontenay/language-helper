@@ -1,7 +1,55 @@
-﻿@page "/folder/{title}"
+﻿@page "/folder/{FolderName}"
+@using LanguageHelper.Services
+@inject FolderDbService DbService
+@inject NavigationManager NavManager
 
-<h3 class="mt-20">Folder: @Title</h3>
+<h3 class="text-3xl font-semibold text-center mb-6">
+    Vocabulary List for @FolderName
+</h3>
+
+<input @bind="_newWord" placeholder="Word" class="border border-gray-300 rounded-lg p-3 w-full mb-2" />
+<input @bind="_newTranslation" placeholder="Translation" class="border border-gray-300 rounded-lg p-3 w-full mb-6" />
+
+<button @onclick="CreateVocabulary"
+        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-300">
+    Add Vocabulary
+</button>
+
+<ul>
+    @foreach (var vocab in _vocabulary)
+    {
+        <li>@vocab.Word => @vocab.Translation</li>
+    }
+</ul>
 
 @code {
-    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? FolderName { get; set; }
+    private int _folderId;
+    private string? _newWord;
+    private string? _newTranslation;
+    private readonly List<VocabularyItems> _vocabulary = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var folders = await DbService.GetFoldersAsync();
+        var folder = folders.FirstOrDefault(f => f.Name == FolderName);
+
+        if (folder != null)
+        {
+            _folderId = folder.Id;
+            _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(_folderId));
+        }
+    }
+
+    private async void CreateVocabulary()
+    {
+        if (!string.IsNullOrEmpty(_newWord) && !string.IsNullOrEmpty(_newTranslation))
+        {
+            await DbService.CreateVocabularyAsync(_folderId, _newWord, _newTranslation);
+            _vocabulary.Clear();
+            _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(_folderId));
+            _newWord = string.Empty;
+            _newTranslation = string.Empty;
+        }
+    }
 }

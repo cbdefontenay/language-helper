@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace LanguageHelper;
+﻿namespace LanguageHelper;
 
 public static class MauiProgram
 {
@@ -12,7 +10,7 @@ public static class MauiProgram
             .ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
 
         builder.Services.AddMauiBlazorWebView();
-        builder.Services.AddSingleton<FolderPage>();
+        builder.Services.AddSingleton<FolderDbService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
