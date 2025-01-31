@@ -1,0 +1,19 @@
+﻿@inject NavigationManager NavManager
+
+<div class="fixed top-0 left-0 w-full bg-white shadow-md flex items-center p-2 lg:p-4">
+    <button @onclick="GoBack" class="p-2 rounded-full hover:bg-gray-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </button>
+</div>
+
+@code {
+    private void GoBack()
+    {
+        if (NavManager.Uri != NavManager.BaseUri)
+        {
+            NavManager.NavigateTo("javascript:history.back()");
+        }
+    }
+}
