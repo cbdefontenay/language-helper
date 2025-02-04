@@ -1,4 +1,4 @@
-﻿namespace LanguageHelper.Modals;
+﻿namespace LanguageHelper.Models;
 
 public class FolderItems
 {

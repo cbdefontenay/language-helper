@@ -1,4 +1,6 @@
-﻿namespace LanguageHelper.Services;
+﻿using LanguageHelper.Models;
+
+namespace LanguageHelper.Services;
 
 public class FolderDbService
 {
