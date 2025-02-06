@@ -1,4 +1,7 @@
-﻿@inject IJSRuntime JS
+﻿@using LanguageHelper.i18n
+@using Microsoft.Extensions.Localization
+@inject IJSRuntime JS
+@inject IStringLocalizer<Translations> Trans
 @inject NavigationManager Navigation
 
 <nav class="fixed top-0 left-0 w-full bg-gray-800 dark:bg-gray-900 text-white shadow-md z-50 h-14 flex items-center">
@@ -21,7 +24,7 @@
         <nav class="flex flex-col space-y-6 lg:flex-row lg:space-x-4 lg:space-y-0 lg:w-full lg:justify-start">
             <NavLink href="/"
                      class="block py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-600 dark:hover:bg-gray-700 rounded">
-                Home
+                @Trans["HomeNav"]
             </NavLink>
             <NavLink href="/folder"
                      class="block py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-600 dark:hover:bg-gray-700 rounded">
@@ -36,17 +39,17 @@
 
     protected override void OnInitialized()
     {
-        // Subscribe to the location changed event to reset the menu
         Navigation.LocationChanged += OnLocationChanged;
     }
 
-    private void OnLocationChanged(object sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    private void OnLocationChanged(object sender, LocationChangedEventArgs e)
     {
-        // Close the menu if it's open on route change
-        if (_isMenuOpen)
+        switch (_isMenuOpen)
         {
-            _isMenuOpen = false;
-            JS.InvokeVoidAsync("toggleNavMenu", _isMenuOpen);
+            case true:
+                _isMenuOpen = false;
+                JS.InvokeVoidAsync("toggleNavMenu", _isMenuOpen);
+                break;
         }
     }
 
@@ -58,7 +61,6 @@
 
     public void Dispose()
     {
-        // Unsubscribe from the location changed event when the component is disposed
         Navigation.LocationChanged -= OnLocationChanged;
     }
 }
