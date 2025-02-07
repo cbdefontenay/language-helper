@@ -1,6 +1,35 @@
-﻿<Router AppAssembly="@typeof(MauiProgram).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)"/>
-        <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
-    </Found>
-</Router>
+﻿@using LanguageHelper.Components.Pages
+@inject NavigationManager Navigation
+
+@if (_isCheckingOnboarding)
+{
+    <!-- Show nothing until check is done -->
+}
+else if (_needsOnboarding)
+{
+    <PresentationScreen/>
+}
+else
+{
+    <Router AppAssembly="@typeof(MauiProgram).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
+        </Found>
+    </Router>
+}
+
+@code {
+    private bool _isCheckingOnboarding = true;
+    private bool _needsOnboarding;
+
+    protected override void OnInitialized()
+    {
+        _needsOnboarding = !Preferences.Get("HasCompletedOnboarding", false);
+
+        _isCheckingOnboarding = false;
+
+        StateHasChanged();
+    }
+
+}

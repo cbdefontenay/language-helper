@@ -1,10 +1,9 @@
-﻿@page "/folder/{FolderName}"
+﻿@page "/folder/{FolderId:int}"
 @layout GoBackTabLayout
 @inject FolderDbService DbService
-@inject NavigationManager NavManager
 
 <h3 class="text-3xl font-semibold text-center mb-6">
-    Vocabulary List for @FolderName
+    Vocabulary List
 </h3>
 
 <input @bind="_newWord" placeholder="Word" class="border border-gray-300 rounded-lg p-3 w-full mb-2" />
@@ -23,33 +22,27 @@
 </ul>
 
 @code {
-    [Parameter] public string? FolderName { get; set; }
-    private int _folderId;
+    [Parameter] public int FolderId { get; set; }
     private string? _newWord;
     private string? _newTranslation;
     private readonly List<VocabularyItems> _vocabulary = [];
 
     protected override async Task OnInitializedAsync()
     {
-        var folders = await DbService.GetFoldersAsync();
-        var folder = folders.FirstOrDefault(f => f.Name == FolderName);
-
-        if (folder != null)
-        {
-            _folderId = folder.Id;
-            _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(_folderId));
-        }
+        _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
     }
 
     private async void CreateVocabulary()
     {
-        if (!string.IsNullOrEmpty(_newWord) && !string.IsNullOrEmpty(_newTranslation))
+        switch (string.IsNullOrEmpty(_newWord))
         {
-            await DbService.CreateVocabularyAsync(_folderId, _newWord, _newTranslation);
-            _vocabulary.Clear();
-            _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(_folderId));
-            _newWord = string.Empty;
-            _newTranslation = string.Empty;
+            case false when !string.IsNullOrEmpty(_newTranslation):
+                await DbService.CreateVocabularyAsync(FolderId, _newWord, _newTranslation);
+                _vocabulary.Clear();
+                _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
+                _newWord = string.Empty;
+                _newTranslation = string.Empty;
+                break;
         }
     }
 }

@@ -3,8 +3,7 @@
 @inject FolderDbService DbService
 @inject NavigationManager NavManager
 
-
-<div class="flex flex-row justify-center items-center border-dashed border-2 border-sky-600 p-2 mx-auto w-48 h-12 sm:hidden">
+<div class="flex flex-row justify-center items-center border-dashed border-2 border-sky-600 p-2 mx-auto mt-20 w-48 h-12 sm:hidden">
     <img src="images/folder.svg" alt="folder icon" class="mr-2 w-6 h-6"/>
     <button @onclick="OpenWindow"
             class="bg-transparent text-black text-sm">
@@ -12,18 +11,20 @@
     </button>
 </div>
 
-<div class="mt-6">
-    <ul>
-        @foreach (var folder in _folderNames)
-        {
-            <li @onclick="() => GoToDetails(folder)" class="cursor-pointer">@folder.Name</li>
-        }
-    </ul>
+<div class="mt-6 px-4 space-y-4">
+    @foreach (var folder in _folderNames)
+    {
+        <div @onclick="() => GoToDetails(folder.Id)"
+             class="bg-white shadow-md rounded-lg p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-100 transition-all duration-300">
+            <img src="images/folder.svg" alt="folder icon" class="w-8 h-8"/>
+            <span class="text-lg font-medium text-gray-900">@folder.Name</span>
+        </div>
+    }
 </div>
 
 @if (_isWindowOpen)
 {
-    <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center p-4 rounded-lg mt-10">
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full sm:w-96 max-w-lg">
             <h2 class="text-xl font-semibold mb-6 text-center">
                 New Folder
@@ -32,11 +33,11 @@
                    class="border border-gray-300 rounded-lg p-3 w-full mb-6 text-lg"/>
             <div class="flex justify-between">
                 <button @onclick="CreateFolder"
-                        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-300">
+                        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all duration-300">
                     Create
                 </button>
                 <button @onclick="OpenWindow"
-                        class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-all duration-300">
+                        class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all duration-300">
                     Close
                 </button>
             </div>
@@ -45,7 +46,6 @@
 }
 
 @code {
-    [Parameter] public FolderItems? Names { get; set; }
     readonly List<FolderItems> _folderNames = [];
     bool _isWindowOpen = false;
     string _newFolderName = string.Empty;
@@ -62,21 +62,21 @@
 
     private async void CreateFolder()
     {
-        if (!string.IsNullOrEmpty(_newFolderName))
+        switch (string.IsNullOrEmpty(_newFolderName))
         {
-            await DbService.CreateFolderAsync(_newFolderName);
-            _folderNames.Clear();
-            _folderNames.AddRange(await DbService.GetFoldersAsync());
+            case false:
+                await DbService.CreateFolderAsync(_newFolderName);
+                _folderNames.Clear();
+                _folderNames.AddRange(await DbService.GetFoldersAsync());
 
-            _newFolderName = string.Empty;
-            _isWindowOpen = false;
+                _newFolderName = string.Empty;
+                _isWindowOpen = false;
+                break;
         }
     }
 
-    private void GoToDetails(FolderItems items)
+    private void GoToDetails(int folderId)
     {
-        var encodedName = Uri.EscapeDataString(items.Name);
-        NavManager.NavigateTo($"/folder/{encodedName}");
+        NavManager.NavigateTo($"/folder/{folderId}");
     }
-
 }

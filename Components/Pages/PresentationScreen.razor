@@ -1,0 +1,63 @@
+﻿@page "/presentation"
+@inject NavigationManager Navigation
+
+<div class="flex flex-col items-center justify-center h-screen px-6 bg-gray-100 sm:hidden">
+    <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">Welcome to the Vocabulary App</h3>
+    <p class="text-gray-700 text-center mb-6">This app helps you learn new words efficiently.</p>
+
+    <div class="bg-white shadow-lg rounded-xl p-6 w-full max-w-sm text-center">
+        @switch (_currentStep)
+        {
+            case 1:
+                <p class="text-lg font-semibold text-gray-800">📂 Step 1: Create folders to organize words.</p>
+                break;
+            case 2:
+                <p class="text-lg font-semibold text-gray-800">📝 Step 2: Add words and translations to your folders.</p>
+                break;
+            case 3:
+                <p class="text-lg font-semibold text-gray-800">🎓 Step 3: Use flashcards to test your memory.</p>
+                break;
+        }
+    </div>
+
+    <div class="flex gap-4 mt-8">
+        <button @onclick="NextStep"
+                class="bg-blue-600 text-white text-lg px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300">
+            Next
+        </button>
+        @if (_currentStep < 3)
+        {
+            <button @onclick="Skip"
+                    class="bg-gray-400 text-white text-lg px-6 py-3 rounded-lg shadow-md hover:bg-gray-500 transition-all duration-300">
+                Skip
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private int _currentStep = 1;
+
+    private void NextStep()
+    {
+        if (_currentStep < 3)
+        {
+            _currentStep++;
+        }
+        else
+        {
+            CompleteOnboarding();
+        }
+    }
+
+    private void Skip()
+    {
+        CompleteOnboarding();
+    }
+
+    private void CompleteOnboarding()
+    {
+        Preferences.Set("HasCompletedOnboarding", true);
+        Navigation.NavigateTo("/", true);
+    }
+}
