@@ -96,6 +96,34 @@ public class FolderDbService
 
         return folderName ?? "Unknown Folder";
     }
+    
+    public async Task<int> DeleteFolderAsync(int folderId)
+    {
+        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+        connection.Open();
+
+        await using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            await connection.ExecuteAsync(
+                "DELETE FROM VocabularyLists WHERE FolderId = @FolderId",
+                new { FolderId = folderId }, transaction);
+
+            var result = await connection.ExecuteAsync(
+                "DELETE FROM Folders WHERE Id = @FolderId",
+                new { FolderId = folderId }, transaction);
+
+            transaction.Commit();
+            return result;
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
 
 }
 

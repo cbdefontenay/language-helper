@@ -34,12 +34,18 @@
         <value>Nom de la liste</value>
     </data>
     <data name="NewFolderError" xml:space="preserve">
-        <value>Tu dois donner un nom à ta liste</value>
+        <value>Le champs ne doit pas être vide...</value>
     </data>
     <data name="NewWordPopUpPlaceHolder" xml:space="preserve">
         <value>Mot</value>
     </data>
     <data name="NewWordTransPopUpPlaceHolder" xml:space="preserve">
         <value>Traduction</value>
+    </data>
+    <data name="AddVocabHeader" xml:space="preserve">
+        <value>Nouveau mot</value>
+    </data>
+    <data name="DeleteFolderMessage" xml:space="preserve">
+        <value>Supprimer le dossier</value>
     </data>
 </root>

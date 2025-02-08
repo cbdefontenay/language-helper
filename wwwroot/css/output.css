@@ -566,20 +566,17 @@
   .top-1 {
     top: calc(var(--spacing) * 1);
   }
-  .top-2 {
-    top: calc(var(--spacing) * 2);
-  }
   .top-50 {
     top: calc(var(--spacing) * 50);
   }
   .top-100 {
     top: calc(var(--spacing) * 100);
   }
+  .right-0 {
+    right: calc(var(--spacing) * 0);
+  }
   .right-1 {
     right: calc(var(--spacing) * 1);
-  }
-  .right-2 {
-    right: calc(var(--spacing) * 2);
   }
   .right-6 {
     right: calc(var(--spacing) * 6);
@@ -601,6 +598,9 @@
   }
   .isolate {
     isolation: isolate;
+  }
+  .z-10 {
+    z-index: 10;
   }
   .z-50 {
     z-index: 50;
@@ -878,6 +878,12 @@
   .h-8 {
     height: calc(var(--spacing) * 8);
   }
+  .h-50 {
+    height: calc(var(--spacing) * 50);
+  }
+  .h-75 {
+    height: calc(var(--spacing) * 75);
+  }
   .h-100 {
     height: calc(var(--spacing) * 100);
   }
@@ -890,14 +896,11 @@
   .h-25 {
     height: calc(var(--spacing) * 25);
   }
-  .h-50 {
-    height: calc(var(--spacing) * 50);
-  }
-  .h-75 {
-    height: calc(var(--spacing) * 75);
-  }
   .h-auto {
     height: auto;
+  }
+  .h-full {
+    height: 100%;
   }
   .h-screen {
     height: 100vh;
@@ -908,17 +911,17 @@
   .w-8 {
     width: calc(var(--spacing) * 8);
   }
-  .w-100 {
-    width: calc(var(--spacing) * 100);
-  }
-  .w-14 {
-    width: calc(var(--spacing) * 14);
-  }
   .w-25 {
     width: calc(var(--spacing) * 25);
   }
+  .w-32 {
+    width: calc(var(--spacing) * 32);
+  }
   .w-50 {
     width: calc(var(--spacing) * 50);
+  }
+  .w-64 {
+    width: calc(var(--spacing) * 64);
   }
   .w-75 {
     width: calc(var(--spacing) * 75);
@@ -926,11 +929,23 @@
   .w-80 {
     width: calc(var(--spacing) * 80);
   }
+  .w-100 {
+    width: calc(var(--spacing) * 100);
+  }
+  .w-14 {
+    width: calc(var(--spacing) * 14);
+  }
   .w-auto {
     width: auto;
   }
   .w-full {
     width: 100%;
+  }
+  .max-w-48 {
+    max-width: calc(var(--spacing) * 48);
+  }
+  .max-w-64 {
+    max-width: calc(var(--spacing) * 64);
   }
   .max-w-lg {
     max-width: var(--container-lg);
@@ -1159,9 +1174,6 @@
   .bg-cyan-900 {
     background-color: var(--color-cyan-900);
   }
-  .bg-fuchsia-900 {
-    background-color: var(--color-fuchsia-900);
-  }
   .bg-gray-100 {
     background-color: var(--color-gray-100);
   }
@@ -1171,14 +1183,8 @@
   .bg-gray-800 {
     background-color: var(--color-gray-800);
   }
-  .bg-green-600 {
-    background-color: var(--color-green-600);
-  }
   .bg-indigo-500 {
     background-color: var(--color-indigo-500);
-  }
-  .bg-red-600 {
-    background-color: var(--color-red-600);
   }
   .bg-red-700 {
     background-color: var(--color-red-700);
@@ -1194,9 +1200,6 @@
   }
   .bg-slate-300 {
     background-color: var(--color-slate-300);
-  }
-  .bg-slate-600 {
-    background-color: var(--color-slate-600);
   }
   .bg-slate-800 {
     background-color: var(--color-slate-800);
@@ -1351,6 +1354,9 @@
   .text-end {
     text-align: end;
   }
+  .text-left {
+    text-align: left;
+  }
   .text-start {
     text-align: start;
   }
@@ -1418,6 +1424,9 @@
   }
   .text-gray-400 {
     color: var(--color-gray-400);
+  }
+  .text-gray-600 {
+    color: var(--color-gray-600);
   }
   .text-gray-700 {
     color: var(--color-gray-700);
@@ -1567,6 +1576,13 @@
       }
     }
   }
+  .hover\:bg-gray-300 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-gray-300);
+      }
+    }
+  }
   .hover\:bg-gray-500 {
     &:hover {
       @media (hover: hover) {
@@ -1698,16 +1714,6 @@
       border-color: var(--color-gray-600);
     }
   }
-  .dark\:bg-blue-500 {
-    @media (prefers-color-scheme: dark) {
-      background-color: var(--color-blue-500);
-    }
-  }
-  .dark\:bg-fuchsia-950 {
-    @media (prefers-color-scheme: dark) {
-      background-color: var(--color-fuchsia-950);
-    }
-  }
   .dark\:bg-gray-700 {
     @media (prefers-color-scheme: dark) {
       background-color: var(--color-gray-700);
@@ -1723,11 +1729,6 @@
       background-color: var(--color-gray-900);
     }
   }
-  .dark\:bg-green-500 {
-    @media (prefers-color-scheme: dark) {
-      background-color: var(--color-green-500);
-    }
-  }
   .dark\:bg-indigo-800 {
     @media (prefers-color-scheme: dark) {
       background-color: var(--color-indigo-800);
@@ -1741,6 +1742,11 @@
   .dark\:bg-slate-400 {
     @media (prefers-color-scheme: dark) {
       background-color: var(--color-slate-400);
+    }
+  }
+  .dark\:bg-slate-600 {
+    @media (prefers-color-scheme: dark) {
+      background-color: var(--color-slate-600);
     }
   }
   .dark\:bg-slate-700 {

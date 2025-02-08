@@ -60,6 +60,24 @@ namespace LanguageHelper.i18n {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Nouveau mot.
+        /// </summary>
+        internal static string AddVocabHeader {
+            get {
+                return ResourceManager.GetString("AddVocabHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Supprimer le dossier.
+        /// </summary>
+        internal static string DeleteFolderMessage {
+            get {
+                return ResourceManager.GetString("DeleteFolderMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Nouvelle liste.
         /// </summary>
         internal static string HomeCreateFolder {
@@ -105,7 +123,7 @@ namespace LanguageHelper.i18n {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Tu dois donner un nom à ta liste.
+        ///   Looks up a localized string similar to Le champs ne doit pas être vide....
         /// </summary>
         internal static string NewFolderError {
             get {

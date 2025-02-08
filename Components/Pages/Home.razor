@@ -19,16 +19,39 @@
 <div class="mt-6 px-4 space-y-4">
     @foreach (var folder in _folderNames)
     {
-        <div @onclick="() => GoToDetails(folder.Id)"
-             class="bg-slate-200 dark:bg-slate-400 shadow-md rounded-lg p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-100 transition-all duration-300">
-            <svg class="w-8 h-8 mr-4 text-slate-900 dark:text-white" viewBox="0 0 16 16" fill="currentColor"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 1H5L8 3H13V5H3.7457L2.03141 11H4.11144L5.2543 7H16L14 14H0V1Z"/>
-            </svg>
+        <div
+            class="relative bg-slate-200 dark:bg-slate-400 shadow-md rounded-lg p-4 flex justify-between items-center gap-4 cursor-pointer hover:bg-gray-100 transition-all duration-300">
+            <div @onclick="() => GoToDetails(folder.Id)" class="flex items-center">
+                <svg class="w-8 h-8 mr-4 text-slate-900 dark:text-white" viewBox="0 0 16 16" fill="currentColor"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 1H5L8 3H13V5H3.7457L2.03141 11H4.11144L5.2543 7H16L14 14H0V1Z"/>
+                </svg>
+                <span class="text-xl font-medium">
+                    @folder.Name
+                </span>
+            </div>
 
-            <span class="text-xl font-medium">
-                @folder.Name
-            </span>
+            <!-- Three Dots Button -->
+            <div class="relative">
+                <button @onclick="() => ToggleMenu(folder.Id)" class="p-2 rounded-full transition">
+                    <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="5" cy="12" r="2"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="19" cy="12" r="2"/>
+                    </svg>
+                </button>
+
+                <!-- Dropdown Menu -->
+                @if (_openMenuId == folder.Id)
+                {
+                    <div class="absolute right-0 bg-slate-200 dark:bg-slate-600 shadow-md rounded-lg py-2 w-64 z-10">
+                        <button @onclick="() => DeleteFolder(folder.Id)"
+                                class="block w-full text-left px-4 py-2 italic">
+                            @Trans["DeleteFolderMessage"]
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
     }
 </div>
@@ -43,6 +66,7 @@
             <input placeholder="@Trans["HomeCreateFolderPopUpPlaceholder"]"
                    autofocus
                    @bind="_newFolderName"
+                   @oninput="ClearErrorMessage"
                    class="border border-gray-300 dark:border-gray-200 rounded-lg p-3 w-full mb-2 text-lg"/>
             <span class="text-red-600 italic mb-6">
                 @ErrorMessage
@@ -64,8 +88,14 @@
 @code {
     readonly List<FolderItems> _folderNames = [];
     private string? ErrorMessage { get; set; } = string.Empty;
-    bool _isWindowOpen;
-    string _newFolderName = string.Empty;
+    private bool _isWindowOpen;
+    private int? _openMenuId = null;
+    private string _newFolderName = string.Empty;
+
+    void ClearErrorMessage()
+    {
+        ErrorMessage = string.Empty;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -77,23 +107,34 @@
         _isWindowOpen = !_isWindowOpen;
     }
 
-    private async void CreateFolder()
+    void ToggleMenu(int folderId)
     {
-        switch (string.IsNullOrEmpty(_newFolderName))
-        {
-            case false:
-                ErrorMessage = string.Empty;
-                await DbService.CreateFolderAsync(_newFolderName);
-                _folderNames.Clear();
-                _folderNames.AddRange(await DbService.GetFoldersAsync());
+        _openMenuId = _openMenuId == folderId ? null : folderId;
+    }
 
-                _newFolderName = string.Empty;
-                _isWindowOpen = false;
-                break;
-            case true:
-                ErrorMessage = Trans["NewFolderError"];
-                break;
+    private async Task CreateFolder()
+    {
+        if (string.IsNullOrEmpty(_newFolderName))
+        {
+            ErrorMessage = Trans["NewFolderError"];
+            return;
         }
+        
+        ErrorMessage = string.Empty;
+        await DbService.CreateFolderAsync(_newFolderName);
+        _folderNames.Clear();
+        _folderNames.AddRange(await DbService.GetFoldersAsync());
+
+        _newFolderName = string.Empty;
+        _isWindowOpen = false;
+    }
+
+    private async Task DeleteFolder(int folderId)
+    {
+        await DbService.DeleteFolderAsync(folderId);
+        _folderNames.RemoveAll(f => f.Id == folderId);
+        _openMenuId = null;
+        StateHasChanged();
     }
 
     private void GoToDetails(int folderId)

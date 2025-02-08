@@ -41,12 +41,20 @@
 {
     <div class="fixed inset-0 flex justify-center items-center bg-opacity-50 backdrop-blur-sm p-4">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 class="text-xl font-semibold text-center mb-4">Add Vocabulary</h2>
+            <h2 class="text-xl font-semibold text-center mb-4">
+                @Trans["AddVocabHeader"]
+            </h2>
 
-            <input @bind="_newWord" placeholder="@Trans["NewWordPopUpPlaceHolder"]"
+            <input @bind="_newWord"
+                   placeholder="@Trans["NewWordPopUpPlaceHolder"]"
+                   @oninput="ClearErrorMessage"
                    class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 w-full mb-2 bg-gray-100 dark:bg-gray-700 text-black dark:text-white"/>
-            <input @bind="_newTranslation" placeholder="@Trans["NewWordTransPopUpPlaceHolder"]"
+            <input @bind="_newTranslation"
+                   @oninput="ClearErrorMessage"
+                   placeholder="@Trans["NewWordTransPopUpPlaceHolder"]"
                    class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 w-full mb-4 bg-gray-100 dark:bg-gray-700 text-black dark:text-white"/>
+
+            <span class="mb-4 mt-2">@ErrorMessage</span>
 
             <div class="flex justify-between">
                 <button @onclick="CreateVocabulary"
@@ -69,10 +77,15 @@
     private string? _newTranslation;
     private readonly List<VocabularyItems> _vocabulary = [];
     private bool _isPopupOpen;
+    private string? ErrorMessage { get; set; }
+
+    void ClearErrorMessage()
+    {
+        ErrorMessage = string.Empty;
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        // Fetch the folder name and vocabulary for the folder
         FolderName = await DbService.GetFolderNameAsync(FolderId);
         _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
     }
@@ -82,16 +95,21 @@
         _isPopupOpen = !_isPopupOpen;
     }
 
-    private async void CreateVocabulary()
+    private async Task CreateVocabulary()
     {
-        if (!string.IsNullOrEmpty(_newWord) && !string.IsNullOrEmpty(_newTranslation))
+        switch (string.IsNullOrEmpty(_newWord))
         {
-            await DbService.CreateVocabularyAsync(FolderId, _newWord, _newTranslation);
-            _vocabulary.Clear();
-            _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
-            _newWord = string.Empty;
-            _newTranslation = string.Empty;
-            _isPopupOpen = false;
+            case false when !string.IsNullOrEmpty(_newTranslation):
+                await DbService.CreateVocabularyAsync(FolderId, _newWord, _newTranslation);
+                _vocabulary.Clear();
+                _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
+                _newWord = string.Empty;
+                _newTranslation = string.Empty;
+                _isPopupOpen = false;
+                break;
+            case true when string.IsNullOrEmpty(_newTranslation):
+                ErrorMessage = Trans["NewFolderError"];
+                break;
         }
     }
 
@@ -103,4 +121,5 @@
             vocab.IsFavorite = !vocab.IsFavorite;
         }
     }
+
 }
