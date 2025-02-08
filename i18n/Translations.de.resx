@@ -29,4 +29,10 @@
     <data name="NewFolderError" xml:space="preserve">
         <value>Du musst einen Name geben</value>
     </data>
+    <data name="NewWordPopUpPlaceHolder" xml:space="preserve">
+        <value>Wort</value>
+    </data>
+    <data name="NewWordTransPopUpPlaceHolder" xml:space="preserve">
+        <value>Übersetzung</value>
+    </data>
 </root>

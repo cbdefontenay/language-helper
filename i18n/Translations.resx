@@ -36,4 +36,10 @@
     <data name="NewFolderError" xml:space="preserve">
         <value>Tu dois donner un nom à ta liste</value>
     </data>
+    <data name="NewWordPopUpPlaceHolder" xml:space="preserve">
+        <value>Mot</value>
+    </data>
+    <data name="NewWordTransPopUpPlaceHolder" xml:space="preserve">
+        <value>Traduction</value>
+    </data>
 </root>

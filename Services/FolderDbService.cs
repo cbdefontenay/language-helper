@@ -1,4 +1,6 @@
-﻿namespace LanguageHelper.Services;
+﻿using LanguageHelper.Modals;
+
+namespace LanguageHelper.Services;
 
 public class FolderDbService
 {
@@ -82,6 +84,19 @@ public class FolderDbService
 
         return vocabulary.ToList();
     }
+    
+    public async Task<string> GetFolderNameAsync(int folderId)
+    {
+        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+        connection.Open();
+
+        var folderName = await connection.QuerySingleOrDefaultAsync<string>(
+            "SELECT Name FROM Folders WHERE Id = @FolderId",
+            new { FolderId = folderId });
+
+        return folderName ?? "Unknown Folder";
+    }
+
 }
 
  

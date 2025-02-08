@@ -112,5 +112,23 @@ namespace LanguageHelper.i18n {
                 return ResourceManager.GetString("NewFolderError", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mot.
+        /// </summary>
+        internal static string NewWordPopUpPlaceHolder {
+            get {
+                return ResourceManager.GetString("NewWordPopUpPlaceHolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Traduction.
+        /// </summary>
+        internal static string NewWordTransPopUpPlaceHolder {
+            get {
+                return ResourceManager.GetString("NewWordTransPopUpPlaceHolder", resourceCulture);
+            }
+        }
     }
 }

@@ -1,48 +1,106 @@
 ﻿@page "/folder/{FolderId:int}"
+@using LanguageHelper.Modals
+@using Translations = LanguageHelper.i18n.Translations
 @layout GoBackTabLayout
 @inject FolderDbService DbService
+@inject IStringLocalizer<Translations> Trans
 
-<h3 class="text-3xl font-semibold text-center mb-6">
-    Vocabulary List
+<h3 class="text-3xl font-semibold text-center mb-6 mt-10">
+    @FolderName
 </h3>
 
-<input @bind="_newWord" placeholder="Word" class="border border-gray-300 rounded-lg p-3 w-full mb-2" />
-<input @bind="_newTranslation" placeholder="Translation" class="border border-gray-300 rounded-lg p-3 w-full mb-6" />
-
-<button @onclick="CreateVocabulary"
-        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-300">
-    Add Vocabulary
-</button>
-
-<ul>
+<ul class="space-y-2 mx-4">
     @foreach (var vocab in _vocabulary)
     {
-        <li>@vocab.Word => @vocab.Translation</li>
+        <li class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow flex flex-col relative">
+            <button @onclick="() => ToggleFavorite(vocab.Id)"
+                    class="absolute top-1 right-1 p-1 text-gray-400 hover:text-yellow-500 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22"
+                     fill="@(vocab.IsFavorite ? "yellow" : "none")" stroke="currentColor"
+                     class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 2.5l2.6 5.3 5.9.8-4.3 4.2 1 5.9-5.2-2.7-5.2 2.7 1-5.9L2.5 8.6l5.9-.8z"/>
+                </svg>
+            </button>
+
+            <span class="font-semibold text-lg text-gray-900 dark:text-gray-100">@vocab.Word</span>
+            <span class="italic text-gray-700 dark:text-gray-300">@vocab.Translation</span>
+        </li>
     }
 </ul>
 
+<!-- Floating Action Button (FAB) -->
+<button @onclick="TogglePopup"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-cyan-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 dark:hover:bg-blue-400 transition-all duration-300">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-8 h-8">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+</button>
+
+@if (_isPopupOpen)
+{
+    <div class="fixed inset-0 flex justify-center items-center bg-opacity-50 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-xl font-semibold text-center mb-4">Add Vocabulary</h2>
+
+            <input @bind="_newWord" placeholder="@Trans["NewWordPopUpPlaceHolder"]"
+                   class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 w-full mb-2 bg-gray-100 dark:bg-gray-700 text-black dark:text-white"/>
+            <input @bind="_newTranslation" placeholder="@Trans["NewWordTransPopUpPlaceHolder"]"
+                   class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 w-full mb-4 bg-gray-100 dark:bg-gray-700 text-black dark:text-white"/>
+
+            <div class="flex justify-between">
+                <button @onclick="CreateVocabulary"
+                        class="bg-cyan-900 text-white px-6 py-3 rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-all duration-300">
+                    @Trans["HomeCreateFolderPopUp"]
+                </button>
+                <button @onclick="TogglePopup"
+                        class="bg-red-800 dark:bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 dark:hover:bg-red-400 transition-all duration-300">
+                    @Trans["HomeCreateFolderPopUpClose"]
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public int FolderId { get; set; }
+    private string FolderName { get; set; } = "Loading...";
     private string? _newWord;
     private string? _newTranslation;
     private readonly List<VocabularyItems> _vocabulary = [];
+    private bool _isPopupOpen;
 
     protected override async Task OnInitializedAsync()
     {
+        // Fetch the folder name and vocabulary for the folder
+        FolderName = await DbService.GetFolderNameAsync(FolderId);
         _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
+    }
+
+    private void TogglePopup()
+    {
+        _isPopupOpen = !_isPopupOpen;
     }
 
     private async void CreateVocabulary()
     {
-        switch (string.IsNullOrEmpty(_newWord))
+        if (!string.IsNullOrEmpty(_newWord) && !string.IsNullOrEmpty(_newTranslation))
         {
-            case false when !string.IsNullOrEmpty(_newTranslation):
-                await DbService.CreateVocabularyAsync(FolderId, _newWord, _newTranslation);
-                _vocabulary.Clear();
-                _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
-                _newWord = string.Empty;
-                _newTranslation = string.Empty;
-                break;
+            await DbService.CreateVocabularyAsync(FolderId, _newWord, _newTranslation);
+            _vocabulary.Clear();
+            _vocabulary.AddRange(await DbService.GetVocabularyForFolderAsync(FolderId));
+            _newWord = string.Empty;
+            _newTranslation = string.Empty;
+            _isPopupOpen = false;
+        }
+    }
+
+    private void ToggleFavorite(int vocabId)
+    {
+        var vocab = _vocabulary.FirstOrDefault(v => v.Id == vocabId);
+        if (vocab != null)
+        {
+            vocab.IsFavorite = !vocab.IsFavorite;
         }
     }
 }
