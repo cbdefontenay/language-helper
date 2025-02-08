@@ -20,4 +20,6 @@ global using Microsoft.Maui.Controls;
 global using Microsoft.Maui.Controls.Hosting;
 global using Microsoft.Maui.Hosting;
 global using System.Globalization;
+global using LanguageHelper.i18n;
+global using Microsoft.Extensions.Localization;
 global using Microsoft.Maui.Storage;

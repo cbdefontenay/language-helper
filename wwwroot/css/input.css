@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@layer base {
+    /* Light mode */
+    body {
+        @apply bg-slate-100 text-slate-900;
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+        body {
+            @apply bg-slate-800 text-slate-100;
+        }
+    }
+}

@@ -14,4 +14,19 @@
     <data name="HomeNav" xml:space="preserve">
         <value>Listen</value>
     </data>
+    <data name="HomeCreateFolder" xml:space="preserve">
+        <value>Neue Liste erstellen</value>
+    </data>
+    <data name="HomeCreateFolderPopUp" xml:space="preserve">
+        <value>Erstellen</value>
+    </data>
+    <data name="HomeCreateFolderPopUpClose" xml:space="preserve">
+        <value>Schließen</value>
+    </data>
+    <data name="HomeCreateFolderPopUpPlaceholder" xml:space="preserve">
+        <value>Name der Liste</value>
+    </data>
+    <data name="NewFolderError" xml:space="preserve">
+        <value>Du musst einen Name geben</value>
+    </data>
 </root>

@@ -60,11 +60,56 @@ namespace LanguageHelper.i18n {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Nouvelle liste.
+        /// </summary>
+        internal static string HomeCreateFolder {
+            get {
+                return ResourceManager.GetString("HomeCreateFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Créer.
+        /// </summary>
+        internal static string HomeCreateFolderPopUp {
+            get {
+                return ResourceManager.GetString("HomeCreateFolderPopUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fermer.
+        /// </summary>
+        internal static string HomeCreateFolderPopUpClose {
+            get {
+                return ResourceManager.GetString("HomeCreateFolderPopUpClose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nom de la liste.
+        /// </summary>
+        internal static string HomeCreateFolderPopUpPlaceholder {
+            get {
+                return ResourceManager.GetString("HomeCreateFolderPopUpPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Listes.
         /// </summary>
         internal static string HomeNav {
             get {
                 return ResourceManager.GetString("HomeNav", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tu dois donner un nom à ta liste.
+        /// </summary>
+        internal static string NewFolderError {
+            get {
+                return ResourceManager.GetString("NewFolderError", resourceCulture);
             }
         }
     }

@@ -44,10 +44,10 @@
 
     <ItemGroup>
         <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4"/>
+        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#4A90E2"/>
 
         <!-- Splash Screen -->
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128"/>
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#4A90E2" BaseSize="128,128"/>
 
         <!-- Images -->
         <MauiImage Include="Resources\Images\*"/>
@@ -61,32 +61,32 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Maui" Version="11.0.0" />
-        <PackageReference Include="Dapper" Version="2.1.35" />
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.1" />
-        <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.30" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.30" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
+        <PackageReference Include="CommunityToolkit.Maui" Version="11.0.0"/>
+        <PackageReference Include="Dapper" Version="2.1.35"/>
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.1"/>
+        <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.30"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.30"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\images\" />
+        <Folder Include="wwwroot\images\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Update="i18n\Translations.resx">
-        <Generator>ResXFileCodeGenerator</Generator>
-        <LastGenOutput>Translations.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
+        <EmbeddedResource Update="i18n\Translations.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Translations.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="i18n\Translations.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Translations.resx</DependentUpon>
-      </Compile>
+        <Compile Update="i18n\Translations.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Translations.resx</DependentUpon>
+        </Compile>
     </ItemGroup>
 
 </Project>
