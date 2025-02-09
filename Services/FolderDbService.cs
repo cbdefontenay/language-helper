@@ -4,7 +4,9 @@ namespace LanguageHelper.Services;
 
 public class FolderDbService
 {
-    private readonly string _dbFilePath = Path.Combine(FileSystem.AppDataDirectory, "folder_vocabulary.db"); // Ensure this is a correct path
+    private readonly string
+        _dbFilePath =
+            Path.Combine(FileSystem.AppDataDirectory, "folder_vocabulary.db"); // Ensure this is a correct path
 
     public FolderDbService()
     {
@@ -13,31 +15,45 @@ public class FolderDbService
 
     private void EnsureDatabaseExists()
     {
-        if (!File.Exists(_dbFilePath))
-        {
-            using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-            connection.Open();
+        bool databaseExists = File.Exists(_dbFilePath);
 
+        using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+        connection.Open();
+
+        if (!databaseExists)
+        {
             // SQL commands to create tables if they don't exist
             const string createFoldersTableSql = @"
-                    CREATE TABLE IF NOT EXISTS Folders (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Name TEXT NOT NULL,
-                        Created DATETIME NOT NULL
-                    );";
+                CREATE TABLE IF NOT EXISTS Folders (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    Created DATETIME NOT NULL
+                );";
 
             const string createVocabularyListsTableSql = @"
-                    CREATE TABLE IF NOT EXISTS VocabularyLists (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        FolderId INTEGER NOT NULL,
-                        Word TEXT NOT NULL,
-                        Translation TEXT NOT NULL,
-                        FOREIGN KEY (FolderId) REFERENCES Folders(Id)
-                    );";
+                CREATE TABLE IF NOT EXISTS VocabularyLists (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    FolderId INTEGER NOT NULL,
+                    Word TEXT NOT NULL,
+                    Translation TEXT NOT NULL,
+                    Learned INTEGER DEFAULT 0,
+                    FOREIGN KEY (FolderId) REFERENCES Folders(Id)
+                );";
 
-            // Execute SQL commands
             connection.Execute(createFoldersTableSql);
             connection.Execute(createVocabularyListsTableSql);
+        }
+        else
+        {
+            // Ensure the 'Learned' column exists
+            const string checkColumnSql = "PRAGMA table_info(VocabularyLists);";
+            var columns = connection.Query<string>(checkColumnSql);
+
+            if (!columns.Any(c => c.Contains("Learned")))
+            {
+                const string addLearnedColumnSql = "ALTER TABLE VocabularyLists ADD COLUMN Learned INTEGER DEFAULT 0;";
+                connection.Execute(addLearnedColumnSql);
+            }
         }
     }
 
@@ -80,11 +96,12 @@ public class FolderDbService
         connection.Open();
 
         var vocabulary = await connection.QueryAsync<VocabularyItems>(
-            "SELECT * FROM VocabularyLists WHERE FolderId = @FolderId", new { FolderId = folderId });
+            "SELECT Id, FolderId, Word, Translation, Learned FROM VocabularyLists WHERE FolderId = @FolderId",
+            new { FolderId = folderId });
 
         return vocabulary.ToList();
     }
-    
+
     public async Task<string> GetFolderNameAsync(int folderId)
     {
         await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
@@ -96,7 +113,7 @@ public class FolderDbService
 
         return folderName ?? "Unknown Folder";
     }
-    
+
     public async Task<int> DeleteFolderAsync(int folderId)
     {
         await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
@@ -124,7 +141,37 @@ public class FolderDbService
         }
     }
 
+    public async Task<int> UpdateVocabularyAsync(int wordId, string? word, string? translation)
+    {
+        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+        connection.Open();
 
+        var result = await connection.ExecuteAsync(
+            "UPDATE VocabularyLists SET Word = @Word, Translation = @Translation WHERE Id = @WordId",
+            new { Word = word, Translation = translation, WordId = wordId });
+
+        return result;
+    }
+
+    public async Task<int> DeleteWordAsync(int wordId)
+    {
+        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+        connection.Open();
+
+        var result = await connection.ExecuteAsync(
+            "DELETE FROM VocabularyLists WHERE Id = @WordId",
+            new { WordId = wordId });
+
+        return result;
+    }
+
+    public async Task ToggleLearnedStatusAsync(int wordId, bool learned)
+    {
+        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+        connection.Open();
+
+        await connection.ExecuteAsync(
+            "UPDATE VocabularyLists SET Learned = @Learned WHERE Id = @WordId",
+            new { Learned = learned ? 1 : 0, WordId = wordId });
+    }
 }
-
- 

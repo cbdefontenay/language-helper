@@ -69,6 +69,15 @@ namespace LanguageHelper.i18n {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Supprimer.
+        /// </summary>
+        internal static string DeleteDrop {
+            get {
+                return ResourceManager.GetString("DeleteDrop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Supprimer le dossier.
         /// </summary>
         internal static string DeleteFolderMessage {
@@ -146,6 +155,15 @@ namespace LanguageHelper.i18n {
         internal static string NewWordTransPopUpPlaceHolder {
             get {
                 return ResourceManager.GetString("NewWordTransPopUpPlaceHolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changer.
+        /// </summary>
+        internal static string UpdateDrop {
+            get {
+                return ResourceManager.GetString("UpdateDrop", resourceCulture);
             }
         }
     }

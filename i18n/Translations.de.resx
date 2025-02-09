@@ -41,4 +41,10 @@
     <data name="DeleteFolderMessage" xml:space="preserve">
         <value>Ordner löschen</value>
     </data>
+    <data name="DeleteDrop" xml:space="preserve">
+        <value>Löschen</value>
+    </data>
+    <data name="UpdateDrop" xml:space="preserve">
+        <value>Ändern</value>
+    </data>
 </root>

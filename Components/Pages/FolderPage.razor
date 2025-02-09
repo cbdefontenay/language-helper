@@ -12,16 +12,46 @@
 <ul class="space-y-2 mx-4">
     @foreach (var vocab in _vocabulary)
     {
-        <li class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow flex flex-col relative">
-            <button @onclick="() => ToggleFavorite(vocab.Id)"
-                    class="absolute top-1 right-1 p-1 text-gray-400 hover:text-yellow-500 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22"
-                     fill="@(vocab.IsFavorite ? "yellow" : "none")" stroke="currentColor"
-                     class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M11 2.5l2.6 5.3 5.9.8-4.3 4.2 1 5.9-5.2-2.7-5.2 2.7 1-5.9L2.5 8.6l5.9-.8z"/>
-                </svg>
-            </button>
+        <li class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow flex flex-col relative">
+            <!-- Container for star icon and three-dot menu -->
+            <div class="absolute top-1 right-1 flex items-center space-x-2">
+                <!-- Star icon (Learned toggle) -->
+                <button @onclick="() => ToggleLearnedStatus(vocab)"
+                        class="p-1 text-gray-400 hover:text-yellow-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="@(vocab.Learned ? "yellow" : "none")" viewBox="0 0 24 24"
+                         stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                </button>
+
+                <!-- Three-dot menu -->
+                <button @onclick="() => ToggleOptionsMenu(vocab.Id)"
+                        class="p-1 text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                         class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 6v.01M12 12v.01M12 18v.01"/>
+                    </svg>
+                </button>
+            </div>
+
+
+            <!-- Dropdown Menu -->
+            @if (_selectedVocabId == vocab.Id)
+            {
+                <div class="absolute top-6 z-50 right-1 bg-slate-200 dark:bg-gray-700 border rounded-lg shadow-md">
+                    <button @onclick="() => ShowUpdatePopup(vocab)"
+                            class="block px-4 py-2 text-sm italic w-full">
+                        @Trans["UpdateDrop"]
+                    </button>
+
+                    <button @onclick="() => DeleteWord(vocab.Id)"
+                            class="block px-4 py-2 text-sm italic w-full">
+                        @Trans["DeleteDrop"]
+                    </button>
+                </div>
+            }
 
             <span class="font-semibold text-lg text-gray-900 dark:text-gray-100">@vocab.Word</span>
             <span class="italic text-gray-700 dark:text-gray-300">@vocab.Translation</span>
@@ -70,6 +100,32 @@
     </div>
 }
 
+@if (_isEditPopupOpen)
+{
+    <div class="fixed inset-0 flex justify-center items-center bg-opacity-50 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-xl font-semibold text-center mb-4">Edit Word</h2>
+
+            <input @bind="_editingVocab!.Word"
+                   class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 w-full mb-2 bg-gray-100 dark:bg-gray-700 text-black dark:text-white"/>
+
+            <input @bind="_editingVocab!.Translation"
+                   class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 w-full mb-4 bg-gray-100 dark:bg-gray-700 text-black dark:text-white"/>
+
+            <div class="flex justify-between">
+                <button @onclick="UpdateVocabulary"
+                        class="bg-blue-800 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-400 transition-all duration-300">
+                    Save
+                </button>
+                <button @onclick="() => _isEditPopupOpen = false"
+                        class="bg-red-800 dark:bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 dark:hover:bg-red-400 transition-all duration-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public int FolderId { get; set; }
     private string FolderName { get; set; } = "Loading...";
@@ -78,6 +134,12 @@
     private readonly List<VocabularyItems> _vocabulary = [];
     private bool _isPopupOpen;
     private string? ErrorMessage { get; set; }
+    private int? _openMenuId;
+    private VocabularyItems? _editingVocab;
+    private bool _isEditPopupOpen;
+    private int? _selectedVocabId;
+    private bool _isUpdatePopupOpen;
+    private VocabularyItems? _selectedVocab;
 
     void ClearErrorMessage()
     {
@@ -113,13 +175,54 @@
         }
     }
 
-    private void ToggleFavorite(int vocabId)
+    private async Task UpdateVocabulary()
     {
-        var vocab = _vocabulary.FirstOrDefault(v => v.Id == vocabId);
-        if (vocab != null)
+        if (_editingVocab != null)
         {
-            vocab.IsFavorite = !vocab.IsFavorite;
+            await DbService.UpdateVocabularyAsync(_editingVocab.Id, _editingVocab.Word, _editingVocab.Translation);
+            var index = _vocabulary.FindIndex(v => v.Id == _editingVocab.Id);
+            if (index != -1)
+            {
+                _vocabulary[index] = new VocabularyItems
+                {
+                    Id = _editingVocab.Id,
+                    Word = _editingVocab.Word,
+                    Translation = _editingVocab.Translation
+                };
+            }
+
+            _isEditPopupOpen = false;
         }
+    }
+
+    private void ToggleOptionsMenu(int vocabId)
+    {
+        _selectedVocabId = _selectedVocabId == vocabId ? null : vocabId;
+    }
+
+    private async Task DeleteWord(int wordId)
+    {
+        await DbService.DeleteWordAsync(wordId);
+        _vocabulary.RemoveAll(v => v.Id == wordId);
+        _selectedVocabId = null;
+    }
+
+    private void ShowUpdatePopup(VocabularyItems vocab)
+    {
+        _editingVocab = new VocabularyItems
+        {
+            Id = vocab.Id,
+            Word = vocab.Word,
+            Translation = vocab.Translation
+        };
+        _isEditPopupOpen = true;
+        _selectedVocabId = null;
+    }
+
+    private async Task ToggleLearnedStatus(VocabularyItems vocab)
+    {
+        vocab.Learned = !vocab.Learned;
+        await DbService.ToggleLearnedStatusAsync(vocab.Id, vocab.Learned);
     }
 
 }
