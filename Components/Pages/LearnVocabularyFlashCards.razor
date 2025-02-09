@@ -1,0 +1,66 @@
+﻿@page "/learn-vocabulary/{FolderId:int}"
+@layout GoBackTabLayout
+@inject FolderDbService FolderService
+
+<PageTitle>Vocabulary Learning</PageTitle>
+
+<div class="flex flex-col items-center justify-center h-full p-4">
+    <div class="w-full max-w-md mt-20">
+        @if (_vocabulary.Count > 0)
+        {
+            <div class="w-full h-48" @onclick="ToggleCard" style="perspective: 1000px;">
+                <div class="relative w-full h-full transition-transform duration-500 ease-in-out"
+                     style="transform-style: preserve-3d; transform: @(_flipped ? "rotateY(180deg)" : "rotateY(0deg)");">
+
+                    <!-- FRONT SIDE (Word) -->
+                    <div
+                        class="absolute w-full h-full flex items-center justify-center text-xl font-bold shadow-lg rounded-xl"
+                        style="background-color: #550855; backface-visibility: hidden;">
+                        <p>@_vocabulary[_currentIndex].Word</p>
+                    </div>
+
+                    <!-- BACK SIDE (Translation) -->
+                    <div
+                        class="absolute w-full h-full flex items-center justify-center text-xl font-bold shadow-lg rounded-xl"
+                        style="background-color: #047e70; transform: rotateY(180deg); backface-visibility: hidden;">
+                        <p>@_vocabulary[_currentIndex].Translation</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="mt-6 px-6 py-2 bg-purple-900 font-bold rounded-lg shadow-md transition duration-300"
+                    @onclick="NextCard">
+                Next
+            </button>
+        }
+        else
+        {
+            <p class="text-gray-500 dark:text-gray-400">No vocabulary found for this folder.</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int FolderId { get; set; }
+    private List<VocabularyItems> _vocabulary = [];
+    private int _currentIndex = 0;
+    private bool _flipped = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var vocabList = await FolderService.GetVocabularyForFolderAsync(FolderId);
+        _vocabulary = vocabList.OrderBy(_ => Guid.NewGuid()).ToList();
+    }
+
+    private void ToggleCard()
+    {
+        _flipped = !_flipped;
+    }
+
+    private void NextCard()
+    {
+        _flipped = false;
+        _currentIndex = (_currentIndex + 1) % _vocabulary.Count;
+    }
+
+}

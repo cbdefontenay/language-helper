@@ -54,4 +54,13 @@
     <data name="UpdateDrop" xml:space="preserve">
         <value>Changer</value>
     </data>
+    <data name="LearnPage" xml:space="preserve">
+        <value>Apprendre</value>
+    </data>
+    <data name="SearchFolder" xml:space="preserve">
+        <value>Chercher une liste...</value>
+    </data>
+    <data name="SearchFolderExplanation" xml:space="preserve">
+        <value>Cherche une liste de vocabulaire en tapant son nom...</value>
+    </data>
 </root>

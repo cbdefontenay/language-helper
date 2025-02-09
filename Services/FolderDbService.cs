@@ -1,105 +1,82 @@
 ﻿using LanguageHelper.Modals;
+using Microsoft.Data.Sqlite;
+using Dapper;
 
 namespace LanguageHelper.Services;
 
 public class FolderDbService
 {
-    private readonly string
-        _dbFilePath =
-            Path.Combine(FileSystem.AppDataDirectory, "folder_vocabulary.db"); // Ensure this is a correct path
+    private readonly string _dbFilePath =
+        Path.Combine(FileSystem.AppDataDirectory, "folder_vocabulary.db");
 
     public FolderDbService()
     {
-        EnsureDatabaseExists();
+        try
+        {
+            EnsureDatabaseExists();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Database initialization failed: {ex.Message}");
+        }
     }
 
     private void EnsureDatabaseExists()
     {
-        bool databaseExists = File.Exists(_dbFilePath);
-
-        using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
-
-        if (!databaseExists)
+        try
         {
-            // SQL commands to create tables if they don't exist
-            const string createFoldersTableSql = @"
-                CREATE TABLE IF NOT EXISTS Folders (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Name TEXT NOT NULL,
-                    Created DATETIME NOT NULL
-                );";
+            bool databaseExists = File.Exists(_dbFilePath);
 
-            const string createVocabularyListsTableSql = @"
-                CREATE TABLE IF NOT EXISTS VocabularyLists (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    FolderId INTEGER NOT NULL,
-                    Word TEXT NOT NULL,
-                    Translation TEXT NOT NULL,
-                    Learned INTEGER DEFAULT 0,
-                    FOREIGN KEY (FolderId) REFERENCES Folders(Id)
-                );";
+            using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            connection.Open();
 
-            connection.Execute(createFoldersTableSql);
-            connection.Execute(createVocabularyListsTableSql);
-        }
-        else
-        {
-            // Ensure the 'Learned' column exists
-            const string checkColumnSql = "PRAGMA table_info(VocabularyLists);";
-            var columns = connection.Query<string>(checkColumnSql);
+            // Enable foreign key constraints
+            connection.Execute("PRAGMA foreign_keys = ON;");
 
-            if (!columns.Any(c => c.Contains("Learned")))
+            if (!databaseExists)
             {
-                const string addLearnedColumnSql = "ALTER TABLE VocabularyLists ADD COLUMN Learned INTEGER DEFAULT 0;";
-                connection.Execute(addLearnedColumnSql);
+                using var transaction = connection.BeginTransaction();
+
+                try
+                {
+                    // Create tables within a transaction
+                    const string createFoldersTableSql = @"
+                        CREATE TABLE IF NOT EXISTS Folders (
+                            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            Name TEXT NOT NULL,
+                            Created DATETIME NOT NULL
+                        );";
+
+                    const string createVocabularyListsTableSql = @"
+                        CREATE TABLE IF NOT EXISTS VocabularyLists (
+                            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            FolderId INTEGER NOT NULL,
+                            Word TEXT NOT NULL,
+                            Translation TEXT NOT NULL,
+                            Learned INTEGER DEFAULT 0,
+                            FOREIGN KEY (FolderId) REFERENCES Folders(Id) ON DELETE CASCADE
+                        );";
+
+                    connection.Execute(createFoldersTableSql, transaction: transaction);
+                    connection.Execute(createVocabularyListsTableSql, transaction: transaction);
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+            else
+            {
+                EnsureColumnExists(connection, "VocabularyLists", "Learned", "INTEGER DEFAULT 0");
             }
         }
-    }
-
-    public async Task<List<FolderItems>> GetFoldersAsync()
-    {
-        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
-
-        var folders = await connection.QueryAsync<FolderItems>("SELECT * FROM Folders");
-        return folders.ToList();
-    }
-
-    public async Task<int> CreateFolderAsync(string folderName)
-    {
-        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
-
-        var result = await connection.ExecuteAsync(
-            "INSERT INTO Folders (Name, Created) VALUES (@Name, @Created)",
-            new { Name = folderName, Created = DateTime.UtcNow });
-
-        return result;
-    }
-
-    public async Task<int> CreateVocabularyAsync(int folderId, string? word, string? translation)
-    {
-        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
-
-        var result = await connection.ExecuteAsync(
-            "INSERT INTO VocabularyLists (FolderId, Word, Translation) VALUES (@FolderId, @Word, @Translation)",
-            new { FolderId = folderId, Word = word, Translation = translation });
-
-        return result;
-    }
-
-    public async Task<List<VocabularyItems>> GetVocabularyForFolderAsync(int folderId)
-    {
-        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
-
-        var vocabulary = await connection.QueryAsync<VocabularyItems>(
-            "SELECT Id, FolderId, Word, Translation, Learned FROM VocabularyLists WHERE FolderId = @FolderId",
-            new { FolderId = folderId });
-
-        return vocabulary.ToList();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing database: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<string> GetFolderNameAsync(int folderId)
@@ -114,43 +91,129 @@ public class FolderDbService
         return folderName ?? "Unknown Folder";
     }
 
-    public async Task<int> DeleteFolderAsync(int folderId)
+    private void EnsureColumnExists(SqliteConnection connection, string tableName, string columnName,
+        string columnDefinition)
     {
-        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
-
-        await using var transaction = connection.BeginTransaction();
-
         try
         {
-            await connection.ExecuteAsync(
-                "DELETE FROM VocabularyLists WHERE FolderId = @FolderId",
-                new { FolderId = folderId }, transaction);
-
-            var result = await connection.ExecuteAsync(
-                "DELETE FROM Folders WHERE Id = @FolderId",
-                new { FolderId = folderId }, transaction);
-
-            transaction.Commit();
-            return result;
+            var columns = connection.Query<string>("PRAGMA table_info(" + tableName + ");").ToList();
+            if (!columns.Any(c => c.Contains(columnName)))
+            {
+                string addColumnSql = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
+                connection.Execute(addColumnSql);
+            }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            transaction.Rollback();
-            throw;
+            Console.WriteLine($"Error checking/adding column '{columnName}' in table '{tableName}': {ex.Message}");
         }
     }
 
-    public async Task<int> UpdateVocabularyAsync(int wordId, string? word, string? translation)
+    public async Task<List<FolderItems>> GetFoldersAsync()
     {
-        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
 
-        var result = await connection.ExecuteAsync(
-            "UPDATE VocabularyLists SET Word = @Word, Translation = @Translation WHERE Id = @WordId",
-            new { Word = word, Translation = translation, WordId = wordId });
+            var folders = await connection.QueryAsync<FolderItems>("SELECT * FROM Folders");
+            return folders.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching folders: {ex.Message}");
+            return new List<FolderItems>();
+        }
+    }
 
-        return result;
+    public async Task<int> CreateFolderAsync(string folderName)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            return await connection.ExecuteAsync(
+                "INSERT INTO Folders (Name, Created) VALUES (@Name, @Created)",
+                new { Name = folderName, Created = DateTime.UtcNow });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating folder: {ex.Message}");
+            return -1;
+        }
+    }
+
+    public async Task<int> CreateVocabularyAsync(int folderId, string? word, string? translation)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            return await connection.ExecuteAsync(
+                "INSERT INTO VocabularyLists (FolderId, Word, Translation) VALUES (@FolderId, @Word, @Translation)",
+                new { FolderId = folderId, Word = word, Translation = translation });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating vocabulary: {ex.Message}");
+            return -1;
+        }
+    }
+
+    public async Task<List<VocabularyItems>> GetVocabularyForFolderAsync(int folderId)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            var vocabulary = await connection.QueryAsync<VocabularyItems>(
+                "SELECT Id, FolderId, Word, Translation, Learned FROM VocabularyLists WHERE FolderId = @FolderId",
+                new { FolderId = folderId });
+
+            return vocabulary.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching vocabulary: {ex.Message}");
+            return new List<VocabularyItems>();
+        }
+    }
+
+    public async Task<int> DeleteFolderAsync(int folderId)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+
+            try
+            {
+                await connection.ExecuteAsync(
+                    "DELETE FROM VocabularyLists WHERE FolderId = @FolderId",
+                    new { FolderId = folderId }, transaction);
+
+                int result = await connection.ExecuteAsync(
+                    "DELETE FROM Folders WHERE Id = @FolderId",
+                    new { FolderId = folderId }, transaction);
+
+                await transaction.CommitAsync();
+                return result;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting folder: {ex.Message}");
+            return -1;
+        }
     }
 
     public async Task<int> DeleteWordAsync(int wordId)
@@ -165,13 +228,38 @@ public class FolderDbService
         return result;
     }
 
+    public async Task<int> UpdateVocabularyAsync(int wordId, string? word, string? translation)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            return await connection.ExecuteAsync(
+                "UPDATE VocabularyLists SET Word = @Word, Translation = @Translation WHERE Id = @WordId",
+                new { Word = word, Translation = translation, WordId = wordId });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating vocabulary: {ex.Message}");
+            return -1;
+        }
+    }
+
     public async Task ToggleLearnedStatusAsync(int wordId, bool learned)
     {
-        await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
-        connection.Open();
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
 
-        await connection.ExecuteAsync(
-            "UPDATE VocabularyLists SET Learned = @Learned WHERE Id = @WordId",
-            new { Learned = learned ? 1 : 0, WordId = wordId });
+            await connection.ExecuteAsync(
+                "UPDATE VocabularyLists SET Learned = @Learned WHERE Id = @WordId",
+                new { Learned = learned ? 1 : 0, WordId = wordId });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling learned status: {ex.Message}");
+        }
     }
 }

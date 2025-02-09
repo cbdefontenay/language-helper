@@ -132,6 +132,15 @@ namespace LanguageHelper.i18n {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apprendre.
+        /// </summary>
+        internal static string LearnPage {
+            get {
+                return ResourceManager.GetString("LearnPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Le champs ne doit pas être vide....
         /// </summary>
         internal static string NewFolderError {
@@ -155,6 +164,24 @@ namespace LanguageHelper.i18n {
         internal static string NewWordTransPopUpPlaceHolder {
             get {
                 return ResourceManager.GetString("NewWordTransPopUpPlaceHolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chercher une liste....
+        /// </summary>
+        internal static string SearchFolder {
+            get {
+                return ResourceManager.GetString("SearchFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cherche une liste de vocabulaire en tapant son nom....
+        /// </summary>
+        internal static string SearchFolderExplanation {
+            get {
+                return ResourceManager.GetString("SearchFolderExplanation", resourceCulture);
             }
         }
         

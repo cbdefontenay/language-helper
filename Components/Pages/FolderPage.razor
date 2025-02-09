@@ -18,7 +18,8 @@
                 <!-- Star icon (Learned toggle) -->
                 <button @onclick="() => ToggleLearnedStatus(vocab)"
                         class="p-1 text-gray-400 hover:text-yellow-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="@(vocab.Learned ? "yellow" : "none")" viewBox="0 0 24 24"
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="@(vocab.Learned ? "yellow" : "none")"
+                         viewBox="0 0 24 24"
                          stroke="currentColor" class="w-6 h-6">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
@@ -134,12 +135,9 @@
     private readonly List<VocabularyItems> _vocabulary = [];
     private bool _isPopupOpen;
     private string? ErrorMessage { get; set; }
-    private int? _openMenuId;
     private VocabularyItems? _editingVocab;
     private bool _isEditPopupOpen;
     private int? _selectedVocabId;
-    private bool _isUpdatePopupOpen;
-    private VocabularyItems? _selectedVocab;
 
     void ClearErrorMessage()
     {

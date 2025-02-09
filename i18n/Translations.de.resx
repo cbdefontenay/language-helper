@@ -47,4 +47,13 @@
     <data name="UpdateDrop" xml:space="preserve">
         <value>Ändern</value>
     </data>
+    <data name="LearnPage" xml:space="preserve">
+        <value>Lernen</value>
+    </data>
+    <data name="SearchFolder" xml:space="preserve">
+        <value>Ordner suchen...</value>
+    </data>
+    <data name="SearchFolderExplanation" xml:space="preserve">
+        <value>Hier kannst du einen ordner suchen indem du seinen Name tipst...</value>
+    </data>
 </root>
