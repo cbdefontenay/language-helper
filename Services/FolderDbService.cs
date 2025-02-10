@@ -1,8 +1,4 @@
-﻿using LanguageHelper.Modals;
-using Microsoft.Data.Sqlite;
-using Dapper;
-
-namespace LanguageHelper.Services;
+﻿namespace LanguageHelper.Services;
 
 public class FolderDbService
 {
@@ -17,7 +13,7 @@ public class FolderDbService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Database initialization failed: {ex.Message}");
+            Console.WriteLine($@"Database initialization failed: {ex.Message}");
         }
     }
 
@@ -41,22 +37,34 @@ public class FolderDbService
                 {
                     // Create tables within a transaction
                     const string createFoldersTableSql = @"
-                        CREATE TABLE IF NOT EXISTS Folders (
-                            Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            Name TEXT NOT NULL,
-                            Created DATETIME NOT NULL
-                        );";
+                    CREATE TABLE IF NOT EXISTS Folders (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Name TEXT NOT NULL,
+                        Created DATETIME NOT NULL
+                    );";
 
                     const string createVocabularyListsTableSql = @"
-                        CREATE TABLE IF NOT EXISTS VocabularyLists (
-                            Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            FolderId INTEGER NOT NULL,
-                            Word TEXT NOT NULL,
-                            Translation TEXT NOT NULL,
-                            Learned INTEGER DEFAULT 0,
+                    CREATE TABLE IF NOT EXISTS VocabularyLists (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        FolderId INTEGER NOT NULL,
+                        Word TEXT NOT NULL,
+                        Translation TEXT NOT NULL,
+                        Learned INTEGER DEFAULT 0,
+                        FOREIGN KEY (FolderId) REFERENCES Folders(Id) ON DELETE CASCADE
+                    );";
+
+                    const string createHighScoresTableSql = @"
+                        CREATE TABLE IF NOT EXISTS FolderHighScores (
+                            FolderId INTEGER PRIMARY KEY,
+                            BestScore INTEGER NOT NULL DEFAULT 0,
+                            Mistakes INTEGER NOT NULL DEFAULT 0,
                             FOREIGN KEY (FolderId) REFERENCES Folders(Id) ON DELETE CASCADE
                         );";
 
+                    EnsureColumnExists(connection, "FolderHighScores", "Mistakes", "INTEGER DEFAULT 0");
+
+
+                    connection.Execute(createHighScoresTableSql, transaction: transaction);
                     connection.Execute(createFoldersTableSql, transaction: transaction);
                     connection.Execute(createVocabularyListsTableSql, transaction: transaction);
                     transaction.Commit();
@@ -74,8 +82,63 @@ public class FolderDbService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error initializing database: {ex.Message}");
+            Console.WriteLine($@"Error initializing database: {ex.Message}");
             throw;
+        }
+    }
+
+    public async Task DeleteOldScoreAsync(int folderId)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            await connection.ExecuteAsync(
+                "DELETE FROM FolderHighScores WHERE FolderId = @FolderId",
+                new { FolderId = folderId });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting old score: {ex.Message}");
+        }
+    }
+
+    public async Task<int> GetBestScoreAsync(int folderId)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            var bestScore = await connection.QuerySingleOrDefaultAsync<int>(
+                "SELECT BestScore FROM FolderHighScores WHERE FolderId = @FolderId",
+                new { FolderId = folderId });
+
+            return bestScore;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching best score: {ex.Message}");
+            return 0; // Default to 0 if there's an issue
+        }
+    }
+
+    public async Task UpdateScoreAsync(int folderId, int score, int mistakes)
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            await connection.ExecuteAsync(
+                "INSERT INTO FolderHighScores (FolderId, BestScore, Mistakes) VALUES (@FolderId, @Score, @Mistakes) " +
+                "ON CONFLICT(FolderId) DO UPDATE SET BestScore = excluded.BestScore, Mistakes = excluded.Mistakes;",
+                new { FolderId = folderId, Score = score, Mistakes = mistakes });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating score: {ex.Message}");
         }
     }
 

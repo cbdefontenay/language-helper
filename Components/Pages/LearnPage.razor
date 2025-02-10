@@ -1,0 +1,39 @@
+﻿@page "/learn-page"
+@inject NavigationManager Navigation
+
+<div class="h-full w-full flex flex-col items-center mt-20">
+    <h3 class="text-xl font-bold italic font-mono mb-10">
+        Comment veux-tu apprendre?
+    </h3>
+
+    <ul>
+        @foreach (var game in _learnList)
+        {
+            <li @onclick="() => NavigateToGame(game)" class="text-green-600 mb-4">
+                @game
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+
+    readonly List<string> _learnList =
+    [
+        "Flashcards",
+        "Devine le mot"
+    ];
+
+    private void NavigateToGame(string game)
+    {
+        var route = game switch
+        {
+            "Flashcards" => "/search-folder-to-learn-flash-cards",
+            "Devine le mot" => "/guess-the-word-page",
+            _ => "/learn-page"
+        };
+
+        Navigation.NavigateTo(route);
+    }
+
+}

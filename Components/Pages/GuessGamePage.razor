@@ -1,0 +1,155 @@
+﻿@page "/learn-vocabulary-guess-game/{FolderId:int}"
+@layout GoBackTabLayout
+@inject FolderDbService FolderService
+@inject NavigationManager Navigation
+
+<div class="h-full flex flex-col items-center justify-center p-6">
+    <h3 class="text-3xl font-bold text-center my-4">Guess the Word</h3>
+
+    <div
+        class="text-center text-lg font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
+        <p>Good Answers: <span class="text-blue-400">@_score</span> | Mistakes: <span class="text-red-500">@_mistakes</span></p>
+    </div>
+
+    @if (_currentWord != null)
+    {
+        <div
+            class="flex flex-col items-center space-y-6 mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <p class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                What is the translation for:
+                <span class="font-bold text-blue-500">@_currentWord.Translation</span>?
+            </p>
+
+            <div class="grid grid-cols-1 gap-4 w-full">
+                @foreach (var option in _answerOptions)
+                {
+                    <button class="p-3 w-full text-lg font-semibold rounded-lg border border-gray-300 dark:border-gray-700 transition duration-300 ease-in-out 
+                                  hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            @onclick="() => CheckAnswer(option)"
+                            style="background-color: @(option == _selectedAnswer ? (_isCorrect ? "#22c55e" : "#ef4444") : "transparent"); color: @(option == _selectedAnswer ? "white" : "");">
+                        @option
+                    </button>
+                }
+            </div>
+
+            @if (_selectedAnswer != null)
+            {
+                if (_remainingWords.Count == 0)
+                {
+                    <div class="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center">
+                        <p class="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                            Final Score: <span class="text-blue-500">@_score</span> | Mistakes: <span class="text-red-500">@_mistakes</span>
+                        </p>
+                    </div>
+
+                    <div class="flex space-x-4 mt-4">
+                        <button class="px-6 py-2 text-lg font-semibold rounded-lg bg-green-500 text-white transition duration-300 ease-in-out 
+                           hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+                                @onclick="RestartGame">
+                            Again
+                        </button>
+
+                        <button class="px-6 py-2 text-lg font-semibold rounded-lg bg-gray-500 text-white transition duration-300 ease-in-out 
+                           hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                @onclick="GoBack">
+                            Back
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <button class="mt-4 px-6 py-2 text-lg font-semibold rounded-lg bg-blue-500 text-white transition duration-300 ease-in-out 
+                       hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            @onclick="LoadNewWord">
+                        Next Word
+                    </button>
+                }
+            }
+
+        </div>
+    }
+    else
+    {
+        <p class="text-center text-gray-600 dark:text-gray-400 mt-6">Loading vocabulary...</p>
+    }
+</div>
+
+@code {
+    [Parameter] public int FolderId { get; set; }
+    private List<VocabularyItems> _vocabulary = [];
+    private List<VocabularyItems> _remainingWords = [];
+    private VocabularyItems? _currentWord;
+    private List<string> _answerOptions = [];
+    private string? _selectedAnswer;
+    private bool _isCorrect;
+    private int _score = 0;
+    private int _mistakes = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _vocabulary = await FolderService.GetVocabularyForFolderAsync(FolderId);
+        _remainingWords = new List<VocabularyItems>(_vocabulary);
+
+        if (_remainingWords.Any())
+        {
+            LoadNewWord();
+        }
+    }
+
+    private void LoadNewWord()
+    {
+        _selectedAnswer = null;
+        _isCorrect = false;
+
+        if (_remainingWords.Count == 0) return;
+
+        var random = new Random();
+        var index = random.Next(_remainingWords.Count);
+        _currentWord = _remainingWords[index];
+        _remainingWords.RemoveAt(index);
+
+        _answerOptions = _vocabulary
+            .Where(v => v.Id != _currentWord.Id)
+            .OrderBy(_ => random.Next())
+            .Take(2)
+            .Select(v => v.Word)
+            .ToList();
+
+        _answerOptions.Add(_currentWord.Word);
+        _answerOptions = _answerOptions.OrderBy(_ => random.Next()).ToList();
+    }
+
+    private void CheckAnswer(string selected)
+    {
+        _selectedAnswer = selected;
+        _isCorrect = selected == _currentWord?.Word;
+
+        if (_isCorrect)
+        {
+            _score++;
+        }
+        else
+        {
+            _mistakes++;
+        }
+
+        if (_remainingWords.Count == 0)
+        {
+            // Game Over
+        }
+    }
+
+    private void RestartGame()
+    {
+        _score = 0;
+        _mistakes = 0;
+        _remainingWords = new List<VocabularyItems>(_vocabulary);
+        LoadNewWord();
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("javascript:history.back()");
+    }
+
+}

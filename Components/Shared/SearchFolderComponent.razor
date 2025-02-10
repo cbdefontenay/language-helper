@@ -1,0 +1,60 @@
+﻿@inject FolderDbService DbService
+@inject NavigationManager Navigation
+@inject IStringLocalizer<Translations> Trans
+@layout GoBackTabLayout
+
+<PageTitle>Search Folders</PageTitle>
+
+<div class="flex flex-col items-center h-full px-4 py-8">
+    <div class="w-full max-w-md space-y-4">
+        <!-- Sticky Search Input -->
+        <div class="sticky top-0 z-10">
+            <input type="text" @bind="_searchQuery" @bind:event="oninput" placeholder="@Trans["SearchFolder"]"
+                   class="w-full p-3 text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"/>
+        </div>
+
+        <!-- Instruction Message -->
+        @if (string.IsNullOrEmpty(_searchQuery))
+        {
+            <p class="text-center text-gray-600 dark:text-gray-400">
+                @Trans["SearchFolderExplanation"]
+            </p>
+        }
+
+        <!-- Folder List -->
+        <ul class="space-y-2 overflow-y-auto max-h-[calc(100vh-200px)]">
+            @foreach (var folder in FilteredFolders)
+            {
+                <li @onclick="() => NavigateToFolder(folder.Id)"
+                    class="cursor-pointer p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200 ease-in-out">
+                    <p class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                        @folder.Name
+                    </p>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? Url { get; set; }
+    private string _searchQuery = "";
+    private List<FolderItems> _folders = [];
+
+    private List<FolderItems> FilteredFolders =>
+        string.IsNullOrEmpty(_searchQuery)
+            ? _folders
+            : _folders.Where(f => f.Name.StartsWith(_searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _folders = await DbService.GetFoldersAsync();
+    }
+
+    private void NavigateToFolder(int folderId)
+    {
+        var formattedUrl = Url?.Replace("{FolderId}", folderId.ToString()) ?? $"/folder/{folderId}";
+        Navigation.NavigateTo(formattedUrl);
+    }
+
+}
