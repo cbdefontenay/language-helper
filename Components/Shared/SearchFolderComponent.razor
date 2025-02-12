@@ -3,8 +3,6 @@
 @inject IStringLocalizer<Translations> Trans
 @layout GoBackTabLayout
 
-<PageTitle>Search Folders</PageTitle>
-
 <div class="flex flex-col items-center h-full px-4 py-8">
     <div class="w-full max-w-md space-y-4">
         <!-- Sticky Search Input -->
@@ -53,8 +51,18 @@
 
     private void NavigateToFolder(int folderId)
     {
-        var formattedUrl = Url?.Replace("{FolderId}", folderId.ToString()) ?? $"/folder/{folderId}";
-        Navigation.NavigateTo(formattedUrl);
+        if (Url is not null)
+        {
+            var formattedUrl = Url
+                .Replace("{FolderId}", folderId.ToString())
+                .Replace("{folderId}", folderId.ToString());
+
+            Navigation.NavigateTo(formattedUrl);
+        }
+        else
+        {
+            Navigation.NavigateTo($"/folder/{folderId}");
+        }
     }
 
 }

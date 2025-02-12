@@ -1,0 +1,70 @@
+﻿@page "/settings"
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Translations> Trans
+@inject CultureService CultureService
+
+<div class="max-w-md mx-auto mt-12 p-6 bg-white rounded-2xl shadow-lg">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">@Trans["SettingsPage"]</h2>
+
+    <div class="space-y-6">
+        <!-- Language Selection -->
+        <div>
+            <label class="block text-gray-700 font-medium mb-2">@Trans["Language"]</label>
+            <div class="relative">
+                <button
+                    class="w-full flex justify-between items-center bg-gray-100 text-gray-800 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    @onclick="ToggleDropdown">
+                    <span>@(SelectedLanguage == "fr" ? Trans["French"] : Trans["German"])</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 transition-transform duration-200"
+                         style="transform: rotate(@(DropdownOpen ? "180deg" : "0deg"));" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <div class="absolute left-0 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-10"
+                     style="display: @(DropdownOpen ? "block" : "none");">
+                    <button class="w-full text-left px-4 py-3 hover:bg-gray-100" @onclick="ChangeLanguageToFrench">@Trans["French"]</button>
+                    <button class="w-full text-left px-4 py-3 hover:bg-gray-100" @onclick="ChangeLanguageToGerman">@Trans["German"]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Settings (Placeholder for Future Enhancements) -->
+        <div>
+            <h4 class="text-lg font-semibold text-gray-800">@Trans["OtherSettings"]</h4>
+            <p class="text-gray-600">@Trans["SettingsDescription"]</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool DropdownOpen { get; set; } = false;
+    private string SelectedLanguage { get; set; } = "fr"; // Default to French
+
+    private void ToggleDropdown()
+    {
+        DropdownOpen = !DropdownOpen;
+    }
+
+    private async Task ChangeLanguageToFrench()
+    {
+        await ChangeLanguage("fr");
+    }
+
+    private async Task ChangeLanguageToGerman()
+    {
+        await ChangeLanguage("de");
+    }
+
+    private async Task ChangeLanguage(string lang)
+    {
+        SelectedLanguage = lang;
+        DropdownOpen = false; // Close the dropdown after selection
+        await CultureService.SetCultureAsync(lang);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        SelectedLanguage = await CultureService.GetStoredCultureAsync();
+    }
+}

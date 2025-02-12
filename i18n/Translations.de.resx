@@ -56,4 +56,10 @@
     <data name="SearchFolderExplanation" xml:space="preserve">
         <value>Hier kannst du einen ordner suchen indem du seinen Name tipst...</value>
     </data>
+    <data name="French" xml:space="preserve">
+        <value>Französisch</value>
+    </data>
+    <data name="German" xml:space="preserve">
+        <value>Deutsch</value>
+    </data>
 </root>

@@ -63,4 +63,10 @@
     <data name="SearchFolderExplanation" xml:space="preserve">
         <value>Cherche une liste de vocabulaire en tapant son nom...</value>
     </data>
+    <data name="French" xml:space="preserve">
+        <value>Français</value>
+    </data>
+    <data name="German" xml:space="preserve">
+        <value>Allemand</value>
+    </data>
 </root>

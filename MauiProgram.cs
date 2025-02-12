@@ -13,6 +13,9 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddLocalization();
         builder.Services.AddSingleton<FolderDbService>();
+        builder.Services.AddScoped<CultureService>();
+        var cultureService = new CultureService();
+        cultureService.ApplySavedCulture();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

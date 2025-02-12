@@ -87,6 +87,24 @@ namespace LanguageHelper.i18n {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Français.
+        /// </summary>
+        internal static string French {
+            get {
+                return ResourceManager.GetString("French", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allemand.
+        /// </summary>
+        internal static string German {
+            get {
+                return ResourceManager.GetString("German", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Nouvelle liste.
         /// </summary>
         internal static string HomeCreateFolder {
