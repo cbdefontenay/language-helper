@@ -13,7 +13,7 @@ public class FolderDbService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Database initialization failed: {ex.Message}");
+            Console.WriteLine(@$"Database initialization failed: {ex.Message}");
         }
     }
 
@@ -21,7 +21,7 @@ public class FolderDbService
     {
         try
         {
-            bool databaseExists = File.Exists(_dbFilePath);
+            var databaseExists = File.Exists(_dbFilePath);
 
             using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
             connection.Open();
@@ -36,7 +36,6 @@ public class FolderDbService
 
                 try
                 {
-                    // Create tables within a transaction
                     const string createFoldersTableSql = @"
                         CREATE TABLE IF NOT EXISTS Folders (
                             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +70,7 @@ public class FolderDbService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error initializing database: {ex.Message}");
+            Console.WriteLine(@$"Error initializing database: {ex.Message}");
             throw;
         }
     }
@@ -96,15 +95,19 @@ public class FolderDbService
             var columns = connection.Query<string>("SELECT name FROM pragma_table_info(@TableName);",
                 new { TableName = tableName }).ToList();
 
-            if (!columns.Any(c => c.Contains(columnName)))
+            switch (columns.Any(c => c.Contains(columnName)))
             {
-                string addColumnSql = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
-                connection.Execute(addColumnSql);
+                case false:
+                {
+                    var addColumnSql = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
+                    connection.Execute(addColumnSql);
+                    break;
+                }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error checking/adding column '{columnName}' in table '{tableName}': {ex.Message}");
+            Console.WriteLine(@$"Error checking/adding column '{columnName}' in table '{tableName}': {ex.Message}");
         }
     }
 
@@ -120,8 +123,8 @@ public class FolderDbService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching folders: {ex.Message}");
-            return new List<FolderItems>();
+            Console.WriteLine(@$"Error fetching folders: {ex.Message}");
+            return [];
         }
     }
 
@@ -138,7 +141,7 @@ public class FolderDbService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error creating folder: {ex.Message}");
+            Console.WriteLine(@$"Error creating folder: {ex.Message}");
             return -1;
         }
     }
@@ -176,8 +179,8 @@ public class FolderDbService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching vocabulary: {ex.Message}");
-            return new List<VocabularyItems>();
+            Console.WriteLine(@$"Error fetching vocabulary: {ex.Message}");
+            return [];
         }
     }
 
@@ -191,12 +194,12 @@ public class FolderDbService
 
             try
             {
-                // Only delete the folder, SQLite will automatically delete related vocabulary lists
-                int result = await connection.ExecuteAsync(
+                var result = await connection.ExecuteAsync(
                     "DELETE FROM Folders WHERE Id = @FolderId",
                     new { FolderId = folderId }, transaction);
 
                 await transaction.CommitAsync();
+                await VacuumDatabaseAsync();
                 return result;
             }
             catch
@@ -256,6 +259,21 @@ public class FolderDbService
         catch (Exception ex)
         {
             Console.WriteLine($"Error toggling learned status: {ex.Message}");
+        }
+    }
+
+    private async Task VacuumDatabaseAsync()
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            await connection.ExecuteAsync("VACUUM;");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(@$"Error during VACUUM operation: {ex.Message}");
         }
     }
 }
