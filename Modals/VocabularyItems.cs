@@ -7,4 +7,5 @@ public class VocabularyItems
     public string Word { get; set; } = string.Empty;
     public string Translation { get; set; } = string.Empty;
     public bool Learned { get; set; }
+    public bool FadingOut { get; set; }
 }

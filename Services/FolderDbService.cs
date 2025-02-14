@@ -261,6 +261,63 @@ public class FolderDbService
             Console.WriteLine($"Error toggling learned status: {ex.Message}");
         }
     }
+    
+    public async Task<int> GetAllNotStarVocabularyCountAsync()
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            var count = await connection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM VocabularyLists WHERE Learned = 0");
+
+            return count;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    
+    public async Task<int> GetAllStarVocabularyAsync()
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            var count = await connection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM VocabularyLists WHERE Learned = 1");
+
+            return count;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    
+    public async Task<int> GetAllNotStarVocabularyAsync()
+    {
+        try
+        {
+            await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
+            await connection.OpenAsync();
+
+            var count = await connection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM VocabularyLists WHERE Learned = 0");
+
+            return count;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 
     private async Task VacuumDatabaseAsync()
     {

@@ -1,0 +1,86 @@
+﻿@page "/display-all"
+@inject FolderDbService DbService
+
+<div class="w-full bg-gray-800 text-white flex justify-around items-center h-10 shadow-md">
+    <button class="@GetTabStyle(true)" @onclick="DisplayAllStar">
+        Gelernt
+    </button>
+    <button class="@GetTabStyle(false)" @onclick="DisplayAllNotStar">
+        Zu lernen
+    </button>
+</div>
+
+<div class="w-11/12 mx-auto mt-4">
+    <ul class="space-y-2">
+        @foreach (var vocab in _filteredVocabulary)
+        {
+            <li @key="vocab.Id"
+                class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow flex flex-col relative transition-opacity duration-500"
+                style="opacity: @(vocab.FadingOut ? 0 : 1)">
+
+                <div class="absolute top-1 right-1 flex items-center space-x-2">
+                    <button @onclick="() => ToggleLearnedStatus(vocab)"
+                            class="p-1 text-gray-400 hover:text-yellow-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="@(vocab.Learned ? "yellow" : "none")"
+                             viewBox="0 0 24 24"
+                             stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <span class="font-semibold text-lg text-gray-900 dark:text-gray-100">@vocab.Word</span>
+                <span class="italic text-gray-700 dark:text-gray-300">@vocab.Translation</span>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    private bool _isStarTabActive = true;
+    private List<VocabularyItems> _filteredVocabulary = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var starVocab = await DbService.GetAllStarVocabularyAsync();
+        _filteredVocabulary = new List<VocabularyItems>(starVocab);
+    }
+
+    async Task DisplayAllStar()
+    {
+        _isStarTabActive = true;
+        var starVocab = await DbService.GetAllStarVocabularyAsync();
+        _filteredVocabulary = new List<VocabularyItems>(starVocab);
+    }
+
+    async Task DisplayAllNotStar()
+    {
+        _isStarTabActive = false;
+        var notStarVocab = await DbService.GetAllNotStarVocabularyCountAsync();
+        _filteredVocabulary = new List<VocabularyItems>(notStarVocab);
+    }
+
+    private async Task ToggleLearnedStatus(VocabularyItems vocab)
+    {
+        vocab.FadingOut = true;
+        StateHasChanged();
+        await Task.Delay(500);
+
+        vocab.Learned = !vocab.Learned;
+        await DbService.ToggleLearnedStatusAsync(vocab.Id, vocab.Learned);
+
+        _filteredVocabulary = vocab.Learned
+            ? (await DbService.GetAllNotStarVocabularyAsync()).ToList()
+            : (await DbService.GetAllStarVocabularyAsync()).ToList();
+
+        StateHasChanged();
+    }
+
+    private string GetTabStyle(bool isStarTab)
+    {
+        return isStarTab == _isStarTabActive
+            ? "flex-1 text-center py-2 bg-gray-600 text-white"
+            : "flex-1 text-center py-2 hover:bg-gray-700 focus:bg-gray-700";
+    }
+}
