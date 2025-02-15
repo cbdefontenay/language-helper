@@ -281,17 +281,17 @@ public class FolderDbService
         }
     }
     
-    public async Task<int> GetAllStarVocabularyAsync()
+    public async Task<List<VocabularyItems>> GetAllStarVocabularyAsync()
     {
         try
         {
             await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
             await connection.OpenAsync();
 
-            var count = await connection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM VocabularyLists WHERE Learned = 1");
+            var vocabList = await connection.QueryAsync<VocabularyItems>(
+                "SELECT * FROM VocabularyLists WHERE Learned = 1");
 
-            return count;
+            return vocabList.ToList();
         }
         catch (Exception e)
         {
@@ -299,18 +299,18 @@ public class FolderDbService
             throw;
         }
     }
-    
-    public async Task<int> GetAllNotStarVocabularyAsync()
+
+    public async Task<List<VocabularyItems>> GetAllNotStarVocabularyAsync()
     {
         try
         {
             await using var connection = new SqliteConnection($"Data Source={_dbFilePath}");
             await connection.OpenAsync();
 
-            var count = await connection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM VocabularyLists WHERE Learned = 0");
+            var vocabList = await connection.QueryAsync<VocabularyItems>(
+                "SELECT * FROM VocabularyLists WHERE Learned = 0");
 
-            return count;
+            return vocabList.ToList();
         }
         catch (Exception e)
         {
